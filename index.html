@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - 2 Players & AI with Sound</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .mode-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .sound-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .sound-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .sound-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .sound-btn.active {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+        }
+
+        .player-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .player {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-symbol {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .player-x .player-symbol {
+            background: #ff6b6b;
+        }
+
+        .player-o .player-symbol {
+            background: #4ecdc4;
+        }
+
+        .current-player {
+            opacity: 1;
+            font-weight: bold;
+        }
+
+        .inactive-player {
+            opacity: 0.6;
+        }
+
+        .status {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            font-weight: 600;
+            min-height: 30px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 12px;
+            width: 100%;
+            max-width: 320px;
+            margin: 0 auto 25px;
+        }
+
+        .cell {
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 12px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            user-select: none;
+        }
+
+        .cell:hover:not(.x):not(.o) {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .cell.x {
+            color: #ff6b6b;
+        }
+
+        .cell.o {
+            color: #4ecdc4;
+        }
+
+        .cell.winning {
+            background: rgba(255, 215, 0, 0.4);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(238, 90, 82, 0.4);
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(238, 90, 82, 0.6);
+        }
+
+        .reset-btn:active {
+            transform: translateY(0);
+        }
+
+        .difficulty-selector {
+            margin: 15px 0;
+            color: white;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 12px;
+            margin: 0 4px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .cell {
+                height: 80px;
+                font-size: 2.2rem;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+
+            .mode-btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+
+            .controls {
+                gap: 10px;
+            }
+
+            .sound-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tic Tac Toe</h1>
+        
+        <div class="mode-selector">
+            <button class="mode-btn active" id="twoPlayerMode">2 Players</button>
+            <button class="mode-btn" id="aiMode">vs AI</button>
+        </div>
+
+        <div class="controls">
+            <div class="sound-control">
+                <span>Sound:</span>
+                <button class="sound-btn active" id="soundToggle">ON</button>
+            </div>
+        </div>
+
+        <div id="difficultyContainer" style="display: none;">
+            <div class="difficulty-selector">
+                <span>Difficulty: </span>
+                <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+                <button class="difficulty-btn" data-difficulty="impossible">Impossible</button>
+            </div>
+        </div>
+        
+        <div class="player-info">
+            <div class="player player-x current-player">
+                <div class="player-symbol">X</div>
+                <span id="playerXLabel">Player X</span>
+            </div>
+            <div class="player player-o inactive-player">
+                <div class="player-symbol">O</div>
+                <span id="playerOLabel">Player O</span>
+            </div>
+        </div>
+        
+        <div class="status" id="status">Player X's turn</div>
+        
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        
+        <button class="reset-btn" id="reset">New Game</button>
+    </div>
+
+    <!-- Sound Effects using Web Audio API (No external files needed!) -->
+    <script>
+        // Web Audio API Context
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        // Initialize audio context on first user interaction
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        // Sound toggle
+        document.getElementById('soundToggle').addEventListener('click', function() {
+            soundEnabled = !soundEnabled;
+            this.textContent = soundEnabled ? 'ON' : 'OFF';
+            this.classList.toggle('active', soundEnabled);
+            if (soundEnabled && !audioCtx) {
+                initAudio();
+            }
+        });
+
+        // Create and play a sound
+        function playSound(frequency, duration, type = 'sine', volume = 0.3) {
+            if (!soundEnabled || !audioCtx) return;
+
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        // Sound effects
+        function playPlaceSound(player) {
+            initAudio();
+            if (player === 'X') {
+                playSound(440, 0.15, 'square', 0.2); // Sharp click for X
+            } else {
+                playSound(330, 0.15, 'sawtooth', 0.2); // Softer tone for O
+            }
+        }
+
+        function playWinSound() {
+            initAudio();
+            // Victory fanfare: 3 ascending notes
+            playSound(523, 0.15); // C
+            setTimeout(() => playSound(659, 0.15), 150); // E
+            setTimeout(() => playSound(784, 0.3), 300); // G (longer)
+        }
+
+        function playDrawSound() {
+            initAudio();
+            playSound(392, 0.4, 'triangle', 0.25); // Mellow tone
+        }
+
+        function playResetSound() {
+            initAudio();
+            playSound(600, 0.1, 'sine', 0.15);
+            setTimeout(() => playSound(800, 0.1, 'sine', 0.15), 100);
+        }
+    </script>
+
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const statusDisplay = document.getElementById('status');
+        const resetButton = document.getElementById('reset');
+        const twoPlayerBtn = document.getElementById('twoPlayerMode');
+        const aiBtn = document.getElementById('aiMode');
+        const difficultyContainer = document.getElementById('difficultyContainer');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        const playerXLabel = document.getElementById('playerXLabel');
+        const playerOLabel = document.getElementById('playerOLabel');
+        const playerX = document.querySelector('.player-x');
+        const playerO = document.querySelector('.player-o');
+        
+        let currentPlayer = 'X';
+        let gameBoard = ['', '', '', '', '', '', '', '', ''];
+        let gameActive = true;
+        let isAIMode = false;
+        let aiDifficulty = 'easy';
+        let humanPlayer = 'X';
+        
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+        
+        // Mode selection
+        twoPlayerBtn.addEventListener('click', () => setGameMode(false));
+        aiBtn.addEventListener('click', () => setGameMode(true));
+        
+        function setGameMode(aiMode) {
+            isAIMode = aiMode;
+            twoPlayerBtn.classList.toggle('active', !aiMode);
+            aiBtn.classList.toggle('active', aiMode);
+            difficultyContainer.style.display = aiMode ? 'block' : 'none';
+            
+            playerXLabel.textContent = aiMode ? 'You (X)' : 'Player X';
+            playerOLabel.textContent = aiMode ? 'AI (O)' : 'Player O';
+            
+            resetGame();
+        }
+        
+        // Difficulty selection
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficultyBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                aiDifficulty = btn.getAttribute('data-difficulty');
+                resetGame();
+            });
+        });
+        
+        function handleCellClick(e) {
+            const clickedCell = e.target;
+            const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
+            
+            if (gameBoard[clickedCellIndex] !== '' || !gameActive || 
+                (isAIMode && currentPlayer !== humanPlayer)) {
+                return;
+            }
+            
+            handleCellPlayed(clickedCell, clickedCellIndex);
+            playPlaceSound(currentPlayer); // Sound on move
+            handleResultValidation();
+        }
+        
+        function handleCellPlayed(clickedCell, clickedCellIndex) {
+            gameBoard[clickedCellIndex] = currentPlayer;
+            clickedCell.textContent = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase());
+        }
+        
+        function handleResultValidation() {
+            let roundWon = false;
+            let winningCombination = [];
+            
+            for (let i = 0; i < winningConditions.length; i++) {
+                const winCondition = winningConditions[i];
+                let a = gameBoard[winCondition[0]];
+                let b = gameBoard[winCondition[1]];
+                let c = gameBoard[winCondition[2]];
+                
+                if (a === '' || b === '' || c === '') continue;
+                if (a === b && b === c) {
+                    roundWon = true;
+                    winningCombination = winCondition;
+                    break;
+                }
+            }
+            
+            if (roundWon) {
+                const winner = currentPlayer === humanPlayer ? (isAIMode ? 'You' : 'Player X') : (isAIMode ? 'AI' : 'Player O');
+                statusDisplay.textContent = `${winner} wins!`;
+                gameActive = false;
+                
+                winningCombination.forEach(index => {
+                    cells[index].classList.add('winning');
+                });
+                
+                playWinSound(); // Victory sound
+                updatePlayerStatus(false);
+                return;
+            }
+            
+            let roundDraw = !gameBoard.includes('');
+            if (roundDraw) {
+                statusDisplay.textContent = "It's a draw!";
+                gameActive = false;
+                playDrawSound(); // Draw sound
+                updatePlayerStatus(false);
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            statusDisplay.textContent = isAIMode && currentPlayer !== humanPlayer ? 
+                "AI is thinking..." : `${currentPlayer === humanPlayer ? (isAIMode ? 'Your' : 'Player X') : (isAIMode ? 'AI' : 'Player O')}'s turn`;
+            
+            updatePlayerStatus(true);
+            
+            if (isAIMode && currentPlayer !== humanPlayer && gameActive) {
+                setTimeout(makeAIMove, 600);
+            }
+        }
+        
+        function makeAIMove() {
+            if (!gameActive) return;
+            
+            let move;
+            switch (aiDifficulty) {
+                case 'easy':
+                    move = getRandomMove();
+                    break;
+                case 'medium':
+                    move = Math.random() < 0.7 ? getSmartMove() : getRandomMove();
+                    break;
+                case 'hard':
+                    move = getSmartMove();
+                    break;
+                case 'impossible':
+                    move = minimax(gameBoard, 'O').index;
+                    break;
+            }
+            
+            if (move !== undefined && gameBoard[move] === '') {
+                const cell = document.querySelector(`.cell[data-index="${move}"]`);
+                handleCellPlayed(cell, move);
+                playPlaceSound('O'); // AI move sound
+                handleResultValidation();
+            }
+        }
+        
+        function getRandomMove() {
+            const emptyCells = gameBoard.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+            return emptyCells.length > 0 ? emptyCells[Math.floor(Math.random() * emptyCells.length)] : undefined;
+        }
+        
+        function getSmartMove() {
+            for (let i = 0; i < 9; i++) {
+                if (gameBoard[i] === '') {
+                    gameBoard[i] = 'O';
+                    if (checkWinner(gameBoard, 'O')) {
+                        gameBoard[i] = '';
+                        return i;
+                    }
+                    gameBoard[i] = '';
+                }
+            }
+            
+            for (let i = 0; i < 9; i++) {
+                if (gameBoard[i] === '') {
+                    gameBoard[i] = 'X';
+                    if (checkWinner(gameBoard, 'X')) {
+                        gameBoard[i] = '';
+                        return i;
+                    }
+                    gameBoard[i] = '';
+                }
+            }
+            
+            if (gameBoard[4] === '') return 4;
+            const corners = [0, 2, 6, 8];
+            for (let corner of corners) {
+                if (gameBoard[corner] === '') return corner;
+            }
+            
+            return getRandomMove();
+        }
+        
+        function checkWinner(board, player) {
+            for (let condition of winningConditions) {
+                if (board[condition[0]] === player && 
+                    board[condition[1]] === player && 
+                    board[condition[2]] === player) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        function minimax(newBoard, player) {
+            const availSpots = newBoard.map((val, idx) => val === '' ? idx : null).filter(val => val !== null);
+            
+            if (checkWinner(newBoard, humanPlayer)) return { score: -10 };
+            if (checkWinner(newBoard, 'O')) return { score: 10 };
+            if (availSpots.length === 0) return { score: 0 };
+            
+            const moves = [];
+            
+            for (let i = 0; i < availSpots.length; i++) {
+                const move = {};
+                move.index = availSpots[i];
+                newBoard[availSpots[i]] = player;
+                
+                if (player === 'O') {
+                    const result = minimax(newBoard, humanPlayer);
+                    move.score = result.score;
+                } else {
+                    const result = minimax(newBoard, 'O');
+                    move.score = result.score;
+                }
+                
+                newBoard[availSpots[i]] = '';
+                moves.push(move);
+            }
+            
+            let bestMove;
+            if (player === 'O') {
+                let bestScore = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score > bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = i;
+                    }
+                }
+            } else {
+                let bestScore = Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    if (moves[i].score < bestScore) {
+                        bestScore = moves[i].score;
+                        bestMove = i;
+                    }
+                }
+            }
+            
+            return moves[bestMove];
+        }
+        
+        function updatePlayerStatus(isTurnChange) {
+            if (!isTurnChange) {
+                playerX.classList.remove('current-player', 'inactive-player');
+                playerO.classList.remove('current-player', 'inactive-player');
+                return;
+            }
+            
+            if (currentPlayer === 'X') {
+                playerX.classList.add('current-player');
+                playerX.classList.remove('inactive-player');
+                playerO.classList.add('inactive-player');
+                playerO.classList.remove('current-player');
+            } else {
+                playerO.classList.add('current-player');
+                playerO.classList.remove('inactive-player');
+                playerX.classList.add('inactive-player');
+                playerX.classList.remove('current-player');
+            }
+        }
+        
+        function resetGame() {
+            currentPlayer = 'X';
+            gameBoard = ['', '', '', '', '', '', '', '', ''];
+            gameActive = true;
+            
+            statusDisplay.textContent = isAIMode ? 
+                (currentPlayer === humanPlayer ? "Your turn (X)" : "AI is thinking...") : 
+                `Player ${currentPlayer}'s turn`;
+            
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('x', 'o', 'winning');
+                cell.style.cursor = isAIMode && currentPlayer !== humanPlayer ? 'not-allowed' : 'pointer';
+            });
+            
+            updatePlayerStatus(true);
+            playResetSound(); // Reset sound
+            
+            if (isAIMode && currentPlayer !== humanPlayer && gameActive) {
+                setTimeout(makeAIMove, 800);
+            }
+        }
+        
+        cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+        resetButton.addEventListener('click', resetGame);
+        
+        // Initialize
+        setGameMode(false);
+    </script>
+</body>
+</html>
